@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold">Admin Dashboard</a>
+        <div class="d-flex">
+            <a href="/admin/profile" class="btn btn-outline-light me-2">👤 My Profile</a>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button class="btn btn-danger">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+
+    <div class="row text-center mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5>Total Tasks</h5>
+                    <h2 id="totalTasks" class="text-primary">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5>In Progress</h5>
+                    <h2 id="inProgress" class="text-warning">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5>Done</h5>
+                    <h2 id="doneTasks" class="text-success">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5>Todo</h5>
+                    <h2 id="todoTasks" class="text-secondary">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-semibold">Registered Users</h3>
+        <a href="/admin/tasks" class="btn btn-primary">🗂 Manage Tasks</a>
+    </div>
+
+    <table class="table table-bordered table-hover shadow-sm bg-white align-middle">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Full name</th>
+            <th>Email</th>
+            <th>Age</th>
+            <th>Role</th>
+            <th style="width:160px;">Actions</th>
+        </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">User Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="viewId"></span></p>
+                <p><strong>Full name:</strong> <span id="viewName"></span></p>
+                <p><strong>Email:</strong> <span id="viewEmail"></span></p>
+                <p><strong>Age:</strong> <span id="viewAge"></span></p>
+                <p><strong>Role:</strong> <span id="viewRole"></span></p>
+                <p><strong>Total Tasks:</strong> <span id="viewTaskCount" class="badge bg-primary">0</span></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let viewModal;
+    document.addEventListener("DOMContentLoaded", () => {
+        viewModal = new bootstrap.Modal(document.getElementById("viewModal"));
+        loadUsers();
+        loadStats();
+    });
+
+    async function loadUsers() {
+        const res = await fetch("/api/persons");
+        const data = await res.json();
+        const tbody = document.getElementById("userTableBody");
+        tbody.innerHTML = "";
+
+        data.filter(u => u.role === "USER").forEach(u => {
+            tbody.innerHTML += `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.firstName} ${u.lastName}</td>
+                <td>${u.email}</td>
+                <td>${u.age}</td>
+                <td>${u.role}</td>
+                <td>
+                    <button class="btn btn-sm btn-info me-2 text-white" onclick="viewUser(${u.id})">👁️ View</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️ Delete</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function loadStats() {
+        const res = await fetch("/api/tasks");
+        const tasks = await res.json();
+
+        const total = tasks.length;
+        const inProgress = tasks.filter(t => t.status === "IN_PROGRESS").length;
+        const done = tasks.filter(t => t.status === "DONE").length;
+        const todo = tasks.filter(t => t.status === "TO_DO").length;
+
+        document.getElementById("totalTasks").textContent = total;
+        document.getElementById("inProgress").textContent = inProgress;
+        document.getElementById("doneTasks").textContent = done;
+        document.getElementById("todoTasks").textContent = todo;
+    }
+
+    async function viewUser(id) {
+        const res = await fetch(`/api/persons/${id}`);
+        const u = await res.json();
+
+        document.getElementById("viewId").textContent = u.id;
+        document.getElementById("viewName").textContent = u.firstName + " " + u.lastName;
+        document.getElementById("viewEmail").textContent = u.email;
+        document.getElementById("viewAge").textContent = u.age;
+        document.getElementById("viewRole").textContent = u.role;
+
+        // Get task count for this user
+        try {
+            const tasksRes = await fetch(`/api/tasks/user/${id}`);
+            const tasks = await tasksRes.json();
+            document.getElementById("viewTaskCount").textContent = tasks.length;
+        } catch (error) {
+            console.error("Error loading tasks count:", error);
+            document.getElementById("viewTaskCount").textContent = "0";
+        }
+
+        viewModal.show();
+    }
+
+    async function deleteUser(id) {
+        if (confirm("Delete user #" + id + "?")) {
+            await fetch("/api/persons/" + id, { method: "DELETE" });
+            loadUsers();
+            loadStats();
+        }
+    }
+</script>
+</body>
+</html>
