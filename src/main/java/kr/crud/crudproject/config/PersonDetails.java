@@ -1,4 +1,4 @@
-package kr.crud.crudproject.person.security;
+package kr.crud.crudproject.config;
 
 import kr.crud.crudproject.person.model.Person;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +31,7 @@ public class PersonDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return person.getEmail(); // логинимся по email
+        return person.getEmail();
     }
 
     @Override

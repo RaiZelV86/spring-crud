@@ -3,6 +3,7 @@ package kr.crud.crudproject.person.controller;
 import kr.crud.crudproject.person.model.Person;
 import kr.crud.crudproject.person.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,11 +22,13 @@ public class AdminController {
         this.personRepository = personRepository;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/dashboard")
     public String dashboard() {
         return "admin/dashboard";
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @GetMapping("/profile")
     public String profile(Authentication authentication, Model model) {
         String email = authentication.getName();

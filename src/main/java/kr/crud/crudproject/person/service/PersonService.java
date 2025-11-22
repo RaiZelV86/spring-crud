@@ -81,6 +81,42 @@ public class PersonService {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Person not found with id: " + id));
 
+        String firstName = request.getFirstName().trim();
+        String lastName  = request.getLastName().trim();
+        String email = request.getEmail().trim();
+
+
+        if (!email.equals(person.getEmail()) &&
+                personRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists!");
+        }
+
+        person.setFirstName(firstName);
+        person.setLastName(lastName);
+        person.setAge(request.getAge());
+        person.setEmail(email);
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            person.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        Person updated = personRepository.save(person);
+
+        return new PersonResponse(
+                updated.getId(),
+                updated.getFirstName(),
+                updated.getLastName(),
+                updated.getAge(),
+                updated.getEmail(),
+                updated.getRole().name()
+        );
+    }
+
+    public PersonResponse updatePersonByEmail(String email, PersonRequest request) {
+
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
         if (!request.getEmail().equals(person.getEmail()) &&
                 personRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists!");
@@ -89,16 +125,11 @@ public class PersonService {
         person.setFirstName(request.getFirstName());
         person.setLastName(request.getLastName());
         person.setAge(request.getAge());
-
-        if (!request.getEmail().equals(person.getEmail())
-                && personRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
-            throw new IllegalArgumentException("Email already exists!");
-        }
+        person.setEmail(request.getEmail());
 
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             person.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-
 
         Person updated = personRepository.save(person);
 

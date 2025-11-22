@@ -1,7 +1,6 @@
 package kr.crud.crudproject.task.service;
 
 import kr.crud.crudproject.person.model.Person;
-import kr.crud.crudproject.person.model.Role;
 import kr.crud.crudproject.person.repository.PersonRepository;
 import kr.crud.crudproject.task.dto.TaskRequest;
 import kr.crud.crudproject.task.model.Task;
@@ -9,6 +8,7 @@ import kr.crud.crudproject.task.model.TaskStatus;
 import kr.crud.crudproject.task.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,32 +28,11 @@ public class TaskService {
         this.personRepository = personRepository;
     }
 
-    public Task create(TaskRequest taskRequest, Authentication authentication) {
-        String email = authentication.getName();
-        Person actor = personRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Actor not found: " + email));
+    public Task createTaskForUser(TaskRequest request, String email) {
+        Person person = personRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
 
-        boolean isAdmin = actor.getRole() == Role.ADMIN;
-
-        Long targetPersonId;
-        if (isAdmin) {
-            if (taskRequest.getPersonId() == null) {
-                throw new IllegalArgumentException("personId is required for admin");
-            }
-            targetPersonId = taskRequest.getPersonId();
-        } else {
-            targetPersonId = actor.getId();
-        }
-
-        Person target = personRepository.findById(targetPersonId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + targetPersonId));
-
-        Task t = new Task();
-        t.setTitle(taskRequest.getTitle());
-        t.setDescription(taskRequest.getDescription());
-        t.setStatus(TaskStatus.TO_DO);
-        t.setPerson(target);
-        return taskRepository.save(t);
+        return saveNewTask(request, person);
     }
 
     public List<Task> getAllTasks() {
@@ -66,7 +45,7 @@ public class TaskService {
 
     public Task updateStatus(Long taskId, TaskStatus taskStatus) {
         Task task = taskRepository.findById(taskId).orElseThrow(()
-                -> new IllegalArgumentException("Task not found with id: " + taskId));
+                -> new IllegalArgumentException("Task not foun with id" + taskId));
 
         task.setStatus(taskStatus);
         task.setUpdatedAt(LocalDateTime.now());
@@ -76,7 +55,7 @@ public class TaskService {
 
     public void deleteTask(Long taskId) {
         if (!taskRepository.existsById(taskId)) {
-            throw new IllegalArgumentException("Task not found with id: " + taskId);
+            throw new IllegalArgumentException("Task not found with id" + taskId);
         }
 
         taskRepository.deleteById(taskId);
@@ -92,5 +71,34 @@ public class TaskService {
         Person person = personRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return taskRepository.findByPersonId(person.getId());
+    }
+
+    public Task create(TaskRequest request, Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN"));
+
+        Person targetPerson;
+        if (isAdmin && request.getPersonId() != null) {
+            targetPerson = personRepository.findById(request.getPersonId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + request.getPersonId()));
+        } else {
+            String email = authentication.getName();
+            targetPerson = personRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + email));
+        }
+
+        return saveNewTask(request, targetPerson);
+    }
+
+    private Task saveNewTask(TaskRequest request, Person person) {
+        Task task = new Task();
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription() == null ? "" : request.getDescription());
+        task.setPerson(person);
+        task.setStatus(TaskStatus.TO_DO);
+        task.setCreatedAt(LocalDateTime.now());
+        task.setUpdatedAt(LocalDateTime.now());
+        return taskRepository.save(task);
     }
 }

@@ -1,6 +1,5 @@
 package kr.crud.crudproject.task.dto;
 
-import kr.crud.crudproject.person.dto.PersonResponse;
 import kr.crud.crudproject.task.model.TaskStatus;
 
 import java.time.LocalDateTime;

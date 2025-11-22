@@ -1,4 +1,4 @@
-package kr.crud.crudproject.person.security;
+package kr.crud.crudproject.config;
 
 import kr.crud.crudproject.person.model.Person;
 import kr.crud.crudproject.person.repository.PersonRepository;

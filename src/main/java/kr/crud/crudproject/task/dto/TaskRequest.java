@@ -10,6 +10,7 @@ public class TaskRequest {
     @Size(min = 5, max = 255, message = "Title must be between 5 and 255 characters")
     private String title;
 
+    @NotNull
     @Size(max = 1000, message = "Description must be less than 1000 characters")
     private String description;
 

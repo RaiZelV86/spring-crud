@@ -1,5 +1,6 @@
 package kr.crud.crudproject.person.controller.rest;
 
+import jakarta.validation.Valid;
 import kr.crud.crudproject.person.dto.PersonRequest;
 import kr.crud.crudproject.person.dto.PersonResponse;
 import kr.crud.crudproject.person.service.PersonService;
@@ -47,7 +48,7 @@ public class PersonController {
 
     @PutMapping("/{id}")
     public ResponseEntity<PersonResponse> updatePerson(@PathVariable Long id,
-                                                       @RequestBody PersonRequest personRequest) {
+                                                       @Valid @RequestBody PersonRequest personRequest) {
        return ResponseEntity.ok(personService.updatePerson(id, personRequest));
     }
 
@@ -55,5 +56,12 @@ public class PersonController {
     public ResponseEntity<PersonResponse> deletePersonById(@PathVariable Long id) {
         personService.deletePerson(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/persons")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseBody
+    public List<PersonResponse> getAll() {
+        return personService.getAllPersons();
     }
 }

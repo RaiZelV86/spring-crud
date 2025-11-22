@@ -1,4 +1,4 @@
-package kr.crud.crudproject.task.controller.rest;
+package kr.crud.crudproject.task.controller;
 
 import jakarta.validation.Valid;
 import kr.crud.crudproject.task.dto.TaskRequest;
@@ -53,38 +53,33 @@ public class TaskController {
         return ResponseEntity.ok(mapToResponse(created));
     }
 
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @GetMapping("/my")
-    public ResponseEntity<List<TaskResponse>> getMyTasks(Authentication authentication) {
-        String email = authentication.getName();
-
-        List<TaskResponse> tasks = taskService.getTasksByEmail(email)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(tasks);
-    }
-
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
         List<TaskResponse> tasks = taskService.getAllTasks()
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(tasks);
+    }
 
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/my")
+    public ResponseEntity<List<TaskResponse>> getMyTasks(Authentication authentication) {
+        List<TaskResponse> tasks = taskService.getTasksByEmail(authentication.getName())
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(tasks);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{personId}")
-    public ResponseEntity<List<TaskResponse>> getTasksByPersonId(@PathVariable Long personId) {
+    public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Long personId) {
         List<TaskResponse> tasks = taskService.getTasksByPerson(personId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(tasks);
     }
 

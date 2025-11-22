@@ -1,4 +1,4 @@
-package kr.crud.crudproject.person.config;
+package kr.crud.crudproject.config;
 
 import kr.crud.crudproject.person.model.Person;
 import kr.crud.crudproject.person.model.Role;
@@ -26,7 +26,7 @@ public class DataInit {
             admin.setLastName("Super");
             admin.setAge(66);
             admin.setEmail(adminEmail);
-            admin.setPassword(passwordEncoder.encode("admin")); // 🔐 пароль
+            admin.setPassword(passwordEncoder.encode("admin"));
             admin.setRole(Role.ADMIN);
 
             personRepository.save(admin);
