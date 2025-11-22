@@ -21,3 +21,8 @@ out/
 
 # Node
 node_modules/
+
+pvs-studio/
+.mvn/
+mvnw
+mvnw.cmd
