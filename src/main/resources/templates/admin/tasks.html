@@ -99,7 +99,7 @@
     }
 
     async function loadUsers() {
-        const res = await fetch("/api/persons");
+        const res = await fetch("/api/users");
         const data = await res.json();
         select.innerHTML = `<option value="">Select user...</option>`;
         data.forEach(u => {
@@ -111,12 +111,12 @@
         e.preventDefault();
         const title = document.getElementById("title").value;
         const description = document.getElementById("description").value;
-        const personId = document.getElementById("personSelect").value;
+        const userId = document.getElementById("personSelect").value;
 
         await fetch("/api/tasks", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ title, description, personId })
+            body: JSON.stringify({ title, description, userId })
         });
 
         document.getElementById("taskForm").reset();

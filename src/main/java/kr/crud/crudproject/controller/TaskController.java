@@ -1,11 +1,11 @@
-package kr.crud.crudproject.task.controller;
+package kr.crud.crudproject.controller;
 
 import jakarta.validation.Valid;
-import kr.crud.crudproject.task.dto.TaskRequest;
-import kr.crud.crudproject.task.dto.TaskResponse;
-import kr.crud.crudproject.task.model.Task;
-import kr.crud.crudproject.task.model.TaskStatus;
-import kr.crud.crudproject.task.service.TaskService;
+import kr.crud.crudproject.dto.TaskRequest;
+import kr.crud.crudproject.dto.TaskResponse;
+import kr.crud.crudproject.model.Task;
+import kr.crud.crudproject.model.TaskStatus;
+import kr.crud.crudproject.service.TaskService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -40,14 +40,14 @@ public class TaskController {
                 task.getStatus(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
-                task.getPerson().getFirstName() + " " + task.getPerson().getLastName()
+                task.getUser().getFirstName() + " " + task.getUser().getLastName()
         );
     }
 
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest,
-                                                   Authentication authentication) {
+                                                    Authentication authentication) {
 
         Task created = taskService.create(taskRequest, authentication);
         return ResponseEntity.ok(mapToResponse(created));
@@ -74,9 +74,9 @@ public class TaskController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/user/{personId}")
-    public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Long personId) {
-        List<TaskResponse> tasks = taskService.getTasksByPerson(personId)
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Long userId) {
+        List<TaskResponse> tasks = taskService.getTasksByUser(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -86,7 +86,7 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PutMapping("/{id}/status")
     public ResponseEntity<TaskResponse> updateStatus(@PathVariable Long id,
-                                                     @RequestParam TaskStatus status) {
+                                                    @RequestParam TaskStatus status) {
         Task updated = taskService.updateStatus(id, status);
         return ResponseEntity.ok(mapToResponse(updated));
     }
@@ -98,3 +98,4 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 }
+

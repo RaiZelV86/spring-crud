@@ -59,7 +59,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="fw-semibold">Registered Users</h3>
-        <a href="/admin/tasks" class="btn btn-primary">🗂 Manage Tasks</a>
+        <div>
+            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#addUserModal">➕ Add User</button>
+            <a href="/admin/tasks" class="btn btn-primary">🗂 Manage Tasks</a>
+        </div>
     </div>
 
     <table class="table table-bordered table-hover shadow-sm bg-white align-middle">
@@ -75,6 +78,43 @@
         </thead>
         <tbody id="userTableBody"></tbody>
     </table>
+</div>
+
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Add New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="firstName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="lastName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" id="age" class="form-control" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" required>
+                    </div>
+                    <div id="addUserError" class="alert alert-danger d-none" role="alert"></div>
+                    <button type="submit" class="btn btn-success w-100">Create User</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
@@ -109,7 +149,7 @@
     });
 
     async function loadUsers() {
-        const res = await fetch("/api/persons");
+        const res = await fetch("/api/users");
         const data = await res.json();
         const tbody = document.getElementById("userTableBody");
         tbody.innerHTML = "";
@@ -146,7 +186,7 @@
     }
 
     async function viewUser(id) {
-        const res = await fetch(`/api/persons/${id}`);
+        const res = await fetch(`/api/users/${id}`);
         const u = await res.json();
 
         document.getElementById("viewId").textContent = u.id;
@@ -170,11 +210,49 @@
 
     async function deleteUser(id) {
         if (confirm("Delete user #" + id + "?")) {
-            await fetch("/api/persons/" + id, { method: "DELETE" });
+            await fetch("/api/users/" + id, { method: "DELETE" });
             loadUsers();
             loadStats();
         }
     }
+
+    document.getElementById("addUserForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const errorDiv = document.getElementById("addUserError");
+        errorDiv.classList.add("d-none");
+
+        const userData = {
+            firstName: document.getElementById("firstName").value,
+            lastName: document.getElementById("lastName").value,
+            email: document.getElementById("email").value,
+            age: parseInt(document.getElementById("age").value),
+            password: document.getElementById("password").value
+        };
+
+        try {
+            const res = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (res.ok) {
+                const addUserModal = bootstrap.Modal.getInstance(document.getElementById("addUserModal"));
+                addUserModal.hide();
+                document.getElementById("addUserForm").reset();
+                loadUsers();
+            } else {
+                const error = await res.json();
+                errorDiv.textContent = error.message || "Failed to create user";
+                errorDiv.classList.remove("d-none");
+            }
+        } catch (error) {
+            errorDiv.textContent = "Error: " + error.message;
+            errorDiv.classList.remove("d-none");
+        }
+    });
 </script>
 </body>
 </html>

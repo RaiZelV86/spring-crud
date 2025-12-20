@@ -1,6 +1,6 @@
 package kr.crud.crudproject.config;
 
-import kr.crud.crudproject.person.model.Person;
+import kr.crud.crudproject.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,30 +8,29 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+public class CustomUserDetails implements UserDetails {
 
-public class PersonDetails implements UserDetails {
+    private final User user;
 
-    private final Person person;
-
-    public PersonDetails(Person person) {
-        this.person = person;
+    public CustomUserDetails(User user) {
+        this.user = user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(
-                new SimpleGrantedAuthority(("ROLE_" + person.getRole().name()))
+                new SimpleGrantedAuthority(("ROLE_" + user.getRole().name()))
         );
     }
 
     @Override
     public String getPassword() {
-        return person.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return person.getEmail();
+        return user.getEmail();
     }
 
     @Override
@@ -54,7 +53,8 @@ public class PersonDetails implements UserDetails {
         return true;
     }
 
-    public Person getPerson() {
-        return person;
+    public User getUser() {
+        return user;
     }
 }
+

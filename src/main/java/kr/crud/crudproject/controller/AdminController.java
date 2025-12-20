@@ -1,7 +1,7 @@
-package kr.crud.crudproject.person.controller;
+package kr.crud.crudproject.controller;
 
-import kr.crud.crudproject.person.model.Person;
-import kr.crud.crudproject.person.repository.PersonRepository;
+import kr.crud.crudproject.model.User;
+import kr.crud.crudproject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -10,16 +10,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
 
-    private final PersonRepository personRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public AdminController(PersonRepository personRepository) {
-        this.personRepository = personRepository;
+    public AdminController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,11 +32,12 @@ public class AdminController {
     public String profile(Authentication authentication, Model model) {
         String email = authentication.getName();
 
-        Person person = personRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        model.addAttribute("admin", person);
+        model.addAttribute("admin", user);
 
         return "admin/profile";
     }
 }
+

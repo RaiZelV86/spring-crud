@@ -69,7 +69,7 @@
       password: document.getElementById("password").value.trim()
     };
 
-    const res = await fetch(`/api/persons/${id}`, {
+    const res = await fetch(`/api/users/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
